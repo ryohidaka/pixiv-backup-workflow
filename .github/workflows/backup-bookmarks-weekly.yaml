@@ -1,0 +1,84 @@
+name: Backup Bookmarks Weekly
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  backup-bookmarks-weekly:
+    permissions: write-all
+    runs-on: ubuntu-latest
+    env:
+      APP_NAME: "pixiv-bookmark-to-csv"
+    steps:
+      - name: Check GA_TOKEN
+        run: |
+          if [[ -z "${{ secrets.GA_TOKEN }}" ]]; then
+            echo "Secret 'GA_TOKEN' is missing"
+            exit 0
+          fi
+
+      - name: Check REFRESH_TOKEN
+        run: |
+          if [[ -z "${{ secrets.REFRESH_TOKEN }}" ]]; then
+            echo "Secret 'REFRESH_TOKEN' is missing"
+            exit 0
+          fi
+
+      - name: Check USER_ID
+        run: |
+          if [[ -z "${{ secrets.USER_ID }}" ]]; then
+            echo "Secret 'USER_ID' is missing"
+            exit 0
+          fi
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.GA_TOKEN }}
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          architecture: "x64"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install -r $APP_NAME/requirements.txt
+
+      - name: Generate backup files
+        env:
+          REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
+          USER_ID: ${{ secrets.USER_ID }}
+        run: |
+          cd $APP_NAME
+          python $APP_NAME/main.py --restrict public --mode all
+          python $APP_NAME/main.py --restrict private --mode all
+
+      - name: Copy data file to project directory
+        run: |
+          cp -R $APP_NAME/output/. ./csv/bookmarks/.
+
+      - name: Diff
+        id: diff
+        run: |
+          git add -N .
+          git diff --name-only --exit-code
+        continue-on-error: true
+
+      - name: Set current datetime as env variable
+        env:
+          TZ: "Asia/Tokyo"
+        run: echo "CURRENT_DATETIME=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      - name: Commit & Push
+        run: |
+          set -x
+          git config user.name github-actions[bot]
+          git config user.email ${{ secrets.USER_EMAIL }}
+          git add .
+          git commit --author=. -m 'backup: ${{ env.CURRENT_DATETIME }}'
+          git push
+        if: steps.diff.outcome == 'failure'
