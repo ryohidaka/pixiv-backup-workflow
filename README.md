@@ -27,6 +27,10 @@ Please use it with the understanding of the above.
 
 Get a list of users that the logged-in user is following. Output the CSV and commit the difference.
 
+### Backup Bookmarks
+
+Get bookmarks. Output the CSV and commit the difference.
+
 ## Related
 
 - [pixivpy](https://github.com/upbit/pixivpy)
