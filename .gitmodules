@@ -1,3 +1,6 @@
 [submodule "pixiv-following-user-to-csv"]
 	path = pixiv-following-user-to-csv
 	url = git@github.com:ryohidaka/pixiv-following-user-to-csv.git
+[submodule "pixiv-bookmark-to-csv"]
+	path = pixiv-bookmark-to-csv
+	url = git@github.com:ryohidaka/pixiv-bookmark-to-csv.git
