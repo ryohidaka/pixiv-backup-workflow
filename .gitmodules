@@ -1,0 +1,3 @@
+[submodule "pixiv-following-user-to-csv"]
+	path = pixiv-following-user-to-csv
+	url = git@github.com:ryohidaka/pixiv-following-user-to-csv.git
